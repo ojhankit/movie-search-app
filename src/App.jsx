@@ -4,7 +4,7 @@ import Search from './components/Search';
 import Spinner from './components/Spinner';
 import MovieCard from './components/MovieCard';
 import { useDebounce } from 'react-use'
-import { updateSearchCount } from './appwrite';
+import { getTrendingMovies, updateSearchCount } from './appwrite';
 
 // api base url
 const API_BASE_URL = 'https://api.themoviedb.org/3'
@@ -28,12 +28,18 @@ const App = () => {
 
   const [isLoading,setIsLoading] = useState(false)
 
+  const [trendingMovies ,setTrendingMovies] = useState([])
+
   const [debouncedSearchTerm ,setDebouncedSearchTerm] = useDebounce('')
 
   useDebounce(() => {
   fetchMovies(searchTerm)
 }, 1000, [searchTerm]);
 
+
+   useEffect( () => {
+    loadTrendingMovies();
+   },[])
 
   const fetchMovies = async(query = '') => {
 
@@ -76,8 +82,18 @@ const App = () => {
   //   fetchMovies(searchTerm)
   // },[searchTerm]) 
 
+  const loadTrendingMovies = async() => {
+    try{
+      const movies = await getTrendingMovies()
+      setTrendingMovies(movies)
+    }
+    catch (error){
+      console.log("Error in loading Trending Movies")
+    }
+  }
+
   return (
-    <main>
+    <main className="">
       <div className='pattern'>
 
       </div>
@@ -88,8 +104,24 @@ const App = () => {
           <Search searchterm={searchTerm} setSearchTerm={setSearchTerm}/>
         </header>
 
+        {trendingMovies.length > 0 && (
+          <section className='trending'>
+            <h2>Trending Movies</h2>
+            <ul>
+            {trendingMovies.map((movie, index) => {
+              return (
+                <li key={movie.$id}>
+                  <p>{index + 1}</p>
+                  <img src={movie.poster_url} alt={movie.title} />
+                </li>
+                );
+            })}
+            </ul>
+          </section>
+        )}
+
         <section className='all-movies'>
-          <h2 className='mt-[20px]'>All Movies</h2>
+          <h2 className=''>All Movies</h2>
           {isLoading ? (
             <Spinner />
           ): errorMessage ? (
